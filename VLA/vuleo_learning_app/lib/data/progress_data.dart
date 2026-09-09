@@ -13,4 +13,4 @@ const Map<String, int> mockCompletedLessonsByTopic = {
 
 /// Most recent quiz score (correct answers) per topic id, for quizzes
 /// already taken. A topic with no entry hasn't had its quiz attempted.
-const Map<String, int> mockQuizScoresByTopic = {'numbers': 4, 'letters': 5};
+const Map<String, int> mockQuizScoresByTopic = {'numbers': 2, 'letters': 5};

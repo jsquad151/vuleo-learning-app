@@ -73,7 +73,7 @@ final List<ChildProfile> mockStudents = [
       'science': 0,
       'life-skills': 3,
     },
-    quizScoresByTopic: const {'numbers': 3},
+    quizScoresByTopic: const {'numbers': 2},
     badges: masonBadges,
   ),
 ];

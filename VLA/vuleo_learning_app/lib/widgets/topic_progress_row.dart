@@ -1,24 +1,21 @@
 import 'package:flutter/material.dart';
 
-import '../models/topic.dart';
+import '../models/topic_performance.dart';
+import 'performance_level_style.dart';
 
 class TopicProgressRow extends StatelessWidget {
-  const TopicProgressRow({
-    super.key,
-    required this.topic,
-    required this.completedLessons,
-    this.quizScore,
-    this.quizTotal,
-  });
+  const TopicProgressRow({super.key, required this.performance});
 
-  final Topic topic;
-  final int completedLessons;
-  final int? quizScore;
-  final int? quizTotal;
+  final TopicPerformance performance;
 
   @override
   Widget build(BuildContext context) {
-    final total = topic.lessons.length;
+    final topic = performance.topic;
+    final completedLessons = performance.completedLessons;
+    final total = performance.totalLessons;
+    final quizScore = performance.quizScore;
+    final quizTotal = performance.quizTotal;
+    final level = performance.level;
     final fraction = total == 0 ? 0.0 : completedLessons / total;
 
     return Container(
@@ -56,6 +53,22 @@ class TopicProgressRow extends StatelessWidget {
                     backgroundColor: topic.color.withValues(alpha: 0.15),
                     valueColor: AlwaysStoppedAnimation(topic.color),
                   ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(level.icon, size: 13, color: level.color),
+                    const SizedBox(width: 4),
+                    Text(
+                      level.label,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 11,
+                        color: level.color,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

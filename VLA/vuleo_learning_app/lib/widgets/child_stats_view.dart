@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/lessons_data.dart';
 import '../data/quizzes_data.dart';
+import '../data/topic_performance_data.dart';
 import '../theme/app_theme.dart';
 import 'stat_tile.dart';
 import 'topic_progress_row.dart';
@@ -39,6 +40,10 @@ class ChildStatsView extends StatelessWidget {
         ? 0
         : (scoreRatios.reduce((a, b) => a + b) / scoreRatios.length * 100)
               .round();
+    final performances = computeTopicPerformance(
+      completedLessonsByTopic,
+      quizScoresByTopic,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -76,19 +81,10 @@ class ChildStatsView extends StatelessWidget {
         const SizedBox(height: 16),
         Expanded(
           child: ListView.separated(
-            itemCount: mockTopics.length,
+            itemCount: performances.length,
             separatorBuilder: (context, index) => const SizedBox(height: 10),
-            itemBuilder: (context, index) {
-              final topic = mockTopics[index];
-              final quiz = mockQuizzes[index];
-              final quizScore = quizScoresByTopic[topic.id];
-              return TopicProgressRow(
-                topic: topic,
-                completedLessons: completedLessonsByTopic[topic.id] ?? 0,
-                quizScore: quizScore,
-                quizTotal: quizScore == null ? null : quiz.questions.length,
-              );
-            },
+            itemBuilder: (context, index) =>
+                TopicProgressRow(performance: performances[index]),
           ),
         ),
       ],
