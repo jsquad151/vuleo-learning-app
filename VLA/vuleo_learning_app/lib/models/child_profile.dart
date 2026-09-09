@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'child_badge.dart';
+
 class ChildProfile {
   const ChildProfile({
     required this.id,
@@ -8,6 +10,7 @@ class ChildProfile {
     required this.avatarColor,
     required this.completedLessonsByTopic,
     required this.quizScoresByTopic,
+    this.badges = const [],
   });
 
   final String id;
@@ -16,4 +19,5 @@ class ChildProfile {
   final Color avatarColor;
   final Map<String, int> completedLessonsByTopic;
   final Map<String, int> quizScoresByTopic;
+  final List<ChildBadge> badges;
 }

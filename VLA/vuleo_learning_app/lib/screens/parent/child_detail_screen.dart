@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/child_profile.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/child_badges_view.dart';
 import '../../widgets/child_stats_view.dart';
 import 'child_settings_view.dart';
 
@@ -13,7 +14,7 @@ class ChildDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           title: Text(child.name),
@@ -21,7 +22,7 @@ class ChildDetailScreen extends StatelessWidget {
             labelColor: AppTheme.parentColor,
             unselectedLabelColor: Colors.black54,
             indicatorColor: AppTheme.parentColor,
-            tabs: [Tab(text: 'Stats'), Tab(text: 'Settings')],
+            tabs: [Tab(text: 'Stats'), Tab(text: 'Badges'), Tab(text: 'Settings')],
           ),
         ),
         body: SafeArea(
@@ -33,6 +34,7 @@ class ChildDetailScreen extends StatelessWidget {
                   completedLessonsByTopic: child.completedLessonsByTopic,
                   quizScoresByTopic: child.quizScoresByTopic,
                 ),
+                ChildBadgesView(badges: child.badges),
                 ChildSettingsView(child: child),
               ],
             ),

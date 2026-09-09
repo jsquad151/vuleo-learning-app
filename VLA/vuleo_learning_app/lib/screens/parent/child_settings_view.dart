@@ -14,7 +14,6 @@ class ChildSettingsView extends StatefulWidget {
 
 class _ChildSettingsViewState extends State<ChildSettingsView> {
   double _dailyLimitMinutes = 60;
-  int _difficulty = 1;
   bool _soundEffects = true;
   bool _weeklyEmail = true;
 
@@ -44,19 +43,6 @@ class _ChildSettingsViewState extends State<ChildSettingsView> {
             activeColor: AppTheme.parentColor,
             label: '${_dailyLimitMinutes.round()} min',
             onChanged: (value) => setState(() => _dailyLimitMinutes = value),
-          ),
-        ),
-        _SettingsCard(
-          title: 'Difficulty level',
-          child: SegmentedButton<int>(
-            segments: const [
-              ButtonSegment(value: 0, label: Text('Easy')),
-              ButtonSegment(value: 1, label: Text('Medium')),
-              ButtonSegment(value: 2, label: Text('Hard')),
-            ],
-            selected: {_difficulty},
-            onSelectionChanged: (selection) =>
-                setState(() => _difficulty = selection.first),
           ),
         ),
         _SettingsCard(

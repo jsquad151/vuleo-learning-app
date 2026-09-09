@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/child_profile.dart';
 import '../theme/app_theme.dart';
+import 'badges_data.dart';
 import 'progress_data.dart';
 
 // A parent may have more than one child. Emma reuses the same mock progress
@@ -15,6 +16,7 @@ final List<ChildProfile> mockChildren = [
     avatarColor: AppTheme.topicColors[0],
     completedLessonsByTopic: mockCompletedLessonsByTopic,
     quizScoresByTopic: mockQuizScoresByTopic,
+    badges: emmaBadges,
   ),
   ChildProfile(
     id: 'noah',
@@ -29,5 +31,6 @@ final List<ChildProfile> mockChildren = [
       'life-skills': 5,
     },
     quizScoresByTopic: const {'letters': 3, 'shapes': 4},
+    badges: noahBadges,
   ),
 ];

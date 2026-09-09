@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/child_profile.dart';
 import '../theme/app_theme.dart';
+import 'badges_data.dart';
 import 'children_data.dart';
 
 // The teacher's roster includes Emma and Noah (the same two children a
@@ -28,6 +29,7 @@ final List<ChildProfile> mockStudents = [
       'science': 4,
       'life-skills': 5,
     },
+    badges: liamBadges,
   ),
   ChildProfile(
     id: 'olivia',
@@ -42,6 +44,7 @@ final List<ChildProfile> mockStudents = [
       'life-skills': 0,
     },
     quizScoresByTopic: const {},
+    badges: oliviaBadges,
   ),
   ChildProfile(
     id: 'ava',
@@ -56,6 +59,7 @@ final List<ChildProfile> mockStudents = [
       'life-skills': 0,
     },
     quizScoresByTopic: const {},
+    badges: avaBadges,
   ),
   ChildProfile(
     id: 'mason',
@@ -70,5 +74,6 @@ final List<ChildProfile> mockStudents = [
       'life-skills': 3,
     },
     quizScoresByTopic: const {'numbers': 3},
+    badges: masonBadges,
   ),
 ];
