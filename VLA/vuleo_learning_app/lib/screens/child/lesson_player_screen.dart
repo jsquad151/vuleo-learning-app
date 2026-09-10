@@ -29,6 +29,7 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen> {
   _LessonPhase _phase = _LessonPhase.segment;
   bool _isLoading = true;
   bool _transitioning = false;
+  bool _answered = false;
   int? _selectedOptionIndex;
 
   @override
@@ -39,20 +40,29 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen> {
 
   Future<void> _loadAndPlay(String asset) async {
     final oldController = _controller;
-    setState(() => _isLoading = true);
+    oldController?.removeListener(_onVideoTick);
     _transitioning = false;
+    setState(() {
+      _controller = null;
+      _isLoading = true;
+    });
+    await oldController?.dispose();
 
     final controller = VideoPlayerController.asset(asset);
-    await controller.initialize();
-    await oldController?.dispose();
+    try {
+      await controller.initialize();
+      controller.addListener(_onVideoTick);
+      await controller.play();
+    } catch (_) {
+      await controller.dispose();
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
 
     if (!mounted) {
       await controller.dispose();
       return;
     }
-
-    controller.addListener(_onVideoTick);
-    await controller.play();
 
     setState(() {
       _controller = controller;
@@ -64,6 +74,7 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen> {
     final controller = _controller;
     if (controller == null || _transitioning) return;
     final value = controller.value;
+    if (value.isBuffering) return;
     if (value.duration > Duration.zero &&
         value.position >= value.duration - const Duration(milliseconds: 200)) {
       _transitioning = true;
@@ -89,11 +100,13 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen> {
   }
 
   void _answer(int index) {
-    if (_phase != _LessonPhase.question) return;
+    if (_phase != _LessonPhase.question || _answered) return;
+    _answered = true;
     final correct = index == widget.lesson.question.correctIndex;
     setState(() => _selectedOptionIndex = index);
 
     Future.delayed(const Duration(milliseconds: 500), () {
+      _answered = false;
       if (!mounted) return;
       if (correct) {
         setState(() => _phase = _LessonPhase.correctContinue);
@@ -112,9 +125,20 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen> {
     super.dispose();
   }
 
+  bool get _videoActive =>
+      _phase == _LessonPhase.segment ||
+      _phase == _LessonPhase.correctContinue ||
+      _phase == _LessonPhase.tryAgain;
+
   @override
   Widget build(BuildContext context) {
     final controller = _controller;
+    final showControls =
+        controller != null &&
+        controller.value.isInitialized &&
+        !_isLoading &&
+        _videoActive;
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -151,9 +175,107 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen> {
               ),
             if (_phase == _LessonPhase.complete)
               _CompleteCard(onDone: () => Navigator.pop(context)),
+            if (showControls)
+              Positioned(
+                left: 16,
+                right: 16,
+                bottom: 16,
+                child: _VideoControls(controller: controller),
+              ),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Play/pause button plus a scrub bar for [controller].
+///
+/// video_player's own scrub-while-playing gesture is unreliable on the web
+/// target (dragging can reset playback to the start), so this pauses before
+/// each seek and only resumes once the drag ends — the standard workaround
+/// for that platform quirk.
+class _VideoControls extends StatefulWidget {
+  const _VideoControls({required this.controller});
+
+  final VideoPlayerController controller;
+
+  @override
+  State<_VideoControls> createState() => _VideoControlsState();
+}
+
+class _VideoControlsState extends State<_VideoControls> {
+  bool _wasPlayingBeforeScrub = false;
+
+  void _seek(double milliseconds) {
+    widget.controller.seekTo(Duration(milliseconds: milliseconds.round()));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = widget.controller;
+    return ValueListenableBuilder<VideoPlayerValue>(
+      valueListenable: controller,
+      builder: (context, value, child) {
+        final durationMs = value.duration.inMilliseconds.toDouble();
+        final positionMs = value.position.inMilliseconds.toDouble().clamp(
+          0.0,
+          durationMs < 0 ? 0.0 : durationMs,
+        );
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.45),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            children: [
+              IconButton(
+                onPressed: () =>
+                    value.isPlaying ? controller.pause() : controller.play(),
+                icon: Icon(
+                  value.isPlaying
+                      ? Icons.pause_rounded
+                      : Icons.play_arrow_rounded,
+                  color: Colors.white,
+                ),
+              ),
+              Expanded(
+                child: durationMs <= 0
+                    ? const SizedBox.shrink()
+                    : SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          trackHeight: 4,
+                          thumbShape: const RoundSliderThumbShape(
+                            enabledThumbRadius: 6,
+                          ),
+                          overlayShape: const RoundSliderOverlayShape(
+                            overlayRadius: 14,
+                          ),
+                        ),
+                        child: Slider(
+                          value: positionMs,
+                          min: 0,
+                          max: durationMs,
+                          activeColor: AppTheme.lessonsColor,
+                          inactiveColor: Colors.white24,
+                          onChangeStart: (_) {
+                            _wasPlayingBeforeScrub = value.isPlaying;
+                            controller.pause();
+                          },
+                          onChanged: _seek,
+                          onChangeEnd: (newValue) {
+                            _seek(newValue);
+                            if (_wasPlayingBeforeScrub) controller.play();
+                          },
+                        ),
+                      ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -176,7 +298,10 @@ class _StatusBanner extends StatelessWidget {
         ),
         child: Text(
           text,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
     );
@@ -254,7 +379,9 @@ class _OptionButton extends StatelessWidget {
     return ElevatedButton(
       onPressed: onTap,
       style: ElevatedButton.styleFrom(
-        backgroundColor: selected ? AppTheme.lessonsColor : AppTheme.parentColor,
+        backgroundColor: selected
+            ? AppTheme.lessonsColor
+            : AppTheme.parentColor,
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -297,7 +424,9 @@ class _CompleteCard extends StatelessWidget {
               backgroundColor: AppTheme.lessonsColor,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
             ),
             child: const Text('Back to Lessons'),
           ),
